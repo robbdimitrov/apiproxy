@@ -1,19 +1,24 @@
 # Node Proxy
 
-Proof of concept proxy using [Node](https://github.com/nodejs/node) and
-[Express](https://github.com/expressjs/express). The following technique
-can be used to keep secrets such as API client tokens out of your frontends.
+Proof of concept proxy using [Node](https://github.com/nodejs/node).
+The following technique can be used to keep secrets such as API
+client tokens out of your frontends.
 
 ## Example usage:
 
 Start the server:
 ```
-$ ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 PORT=8001 node src/server.js
+$ ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 \
+    PORT=8001 \
+    node src/server.js
 ```
 
 Start the proxy:
 ```
-$ ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 PORT=8002 node src/proxy.js
+$ ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 \
+    PORT=8002 \
+    SERVER_ADDR=localhost:8001 \
+    node src/proxy.js
 ```
 
 ## Testing requests:

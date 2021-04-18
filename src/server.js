@@ -1,36 +1,46 @@
-const express = require('express');
-
-const app = express();
+const http = require('http');
 
 const port = process.env.PORT;
 const accessToken = process.env.ACCESS_TOKEN;
 
-app.use(express.json());
+http.createServer((request, response) => {
+  let body = [];
+  request.on('error', (err) => {
+    console.error(err);
+  }).on('data', (chunk) => {
+    body.push(chunk);
+  }).on('end', () => {
+    const requestBody = Buffer.concat(body).toString();
 
-app.use((req, res, next) => {
-  if ('authorization' in req.headers) {
-    let authorization = req.header('authorization').replace('Bearer ', '');
-    if (authorization === accessToken) {
-      return next();
+    console.log('request ended ' + JSON.stringify(request));
+
+    response.on('error', (err) => {
+      console.error(err);
+    });
+
+    if (request.path === '/hello') {
+      const responseBody = {message: 'Hello World'};
+      response.statusCode = 200;
+      response.setHeader('Content-Type', 'application/json');
+      response.end(JSON.stringify(responseBody));
+    } else if (request.path === '/auth' && request.method === 'POST') {
+      const token = request
+        .getHeader('authorization')
+        .replace('Bearer ', '');
+
+      if (token === accessToken) {
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'application/json');
+        response.end(requestBody);
+      } else {
+        response.statusCode = 401;
+        response.end('Unauthorized');
+      }
+    } else {
+      response.statusCode = 404;
+      response.end('Not Found');
     }
-  }
-  res.status(401).send('Unauthorized');
-});
+  });
+}).listen(port);
 
-app.get('/hello', (req, res) => {
-  res.send({type: 'HELLO', status: 'SUCCESSFUL'});
-});
-
-app.post('/auth', (req, res) => {
-  console.log(`BODY = ${JSON.stringify(req.body)}`);
-  res.send({type: 'AUTH', status: 'SUCCESSFUL'});
-});
-
-app.post('/user/:name', (req, res) => {
-  console.log(`For user ${req.params.name} BODY = ${JSON.stringify(req.body)}`);
-  res.send({type: 'AUTH', status: 'SUCCESSFUL'});
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
-});
+console.log(`Starting server on port ${port}`);

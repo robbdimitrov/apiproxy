@@ -1,30 +1,35 @@
-const express = require('express');
-var http = require("http");
-
-const app = express();
-
-const serverHost = 'localhost:8001';
+const http = require('http');
 
 const port = process.env.PORT;
 const accessToken = process.env.ACCESS_TOKEN;
+const serverAddr = process.env.SERVER_ADDR;
 
-app.all('*', (req, res) => {
+http.createServer((request, response) => {
+  request.on('error', (err) => {
+    console.error(err);
+    response.statusCode = 400;
+    response.end();
+  });
+  response.on('error', (err) => {
+    console.error(err);
+  });
+
   // 1. Add Authorization header
   // 2. Send to server
   // 3. Proxy response
   const options = {
-    host: serverHost.split(':')[0],
-    port: serverHost.split(':')[1] || 80,
-    path: req.path,
-    method: req.method,
+    host: serverAddr.split(':')[0],
+    port: serverAddr.split(':')[1] || 80,
+    path: request.path,
+    method: request.method,
     headers: {
-      ...req.headers,
-      authorization: `Bearer ${accessToken}`
+      ...request.headers,
+      authorization: `Bearer ${accessToken}`,
     }
   };
-  req.pipe(http.request(options, (response) => response.pipe(res)));
-});
+  request.pipe(http.request(options, (res) => {
+    res.pipe(response);
+  }));
+}).listen(port);
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
-});
+console.log(`Starting server on port ${port}`);
